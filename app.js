@@ -13,7 +13,7 @@ subScnls.key = "hawks3Z";
 //subScnls.redisPort = 6379;
 subScnls.redisHost = "products01.ess.washington.edu";
 subScnls.redisPort = 32109;
-subScnls.port = 2112; //socket.io port
+subScnls.port = 8080; //socket.io port
 
 var io = require('socket.io')(subScnls.port); //port connection for client
 io.on('connection', function(client){ 
