@@ -1,0 +1,23 @@
+{
+  "name": "QuakeShake",
+  "version": "0.0.0",
+  "description": "this is fork for Azure test / simplified config Jan 10 2015 game",
+  "main": "app.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "bl": "^0.9.3",
+    "redis": "^0.10.3",
+    "socket.io": "^1.0.6"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nikg/QuakeShake.git"
+  },
+  "homepage": "https://github.com/nikg/QuakeShake"
+}
