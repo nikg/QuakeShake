@@ -6,15 +6,25 @@ var http = require('http');
 // var sockjs = require('sockjs');
 var redis = require('redis');
 
-/* inline config details */
-var subScnls={};
-subScnls.key = "hawks3Z";
-//subScnls.redisHost = "localhost";
-//subScnls.redisPort = 6379;
-subScnls.redisHost = "products01.ess.washington.edu";
-subScnls.redisPort = 32109;
-subScnls.port = 2112; //port browser connects to
+var ARGS={};
+process.argv.forEach(function(val, index, array) {
 
+  if(val.match(/=.*/i)){
+    var keyVal = val.split("=");
+    ARGS[keyVal[0]] = keyVal[1];
+  }
+});
+
+if(ARGS['config']==null){
+  console.log("You must supply config file as first arguement Usage:");
+  console.log("Add config file to the config directory and name it [config]Sub.conf.js");
+  console.log("node server/quakeShakeSub config=[config]");
+  process.exit(1);
+}
+
+var SubScnls = require(__dirname + "/../config/" + ARGS['config'] +  "Sub.conf.js"); //unique conf file for this process
+
+var subScnls = new SubScnls();
 var io = require('socket.io')(subScnls.port); //port connection for client
 var sub = redis.createClient(subScnls.redisPort, subScnls.redisHost);
 sub.subscribe(subScnls.key);//subscribe to Pub channel
