@@ -15,30 +15,37 @@ subScnls.key = "hawks3Z";
 //subScnls.redisPort = 6379;
 subScnls.redisHost = "products01.ess.washington.edu";
 subScnls.redisPort = 32109;
-subScnls.port = 8080; //socket.io port
+subScnls.port = 8080; //socket.io port localhost/vm 
 
 var server = http.createServer(app);
-server.listen(process.env.PORT || subScnls.port);
+server.listen(process.env.PORT || subScnls.port); // support Azure port (80)
 
 var io = require('socket.io')(server); //port connection for client
 
 var sub = redis.createClient(subScnls.redisPort, subScnls.redisHost);
 sub.subscribe(subScnls.key);//subscribe to Pub channel
 
+sub.setMaxListeners(0);  // trying to avoid the error/warning (for Redis)
+
+var connectCounter = 0; // try to track clients
+
 io.on('connection', function(client){
+
+	connectCounter++; 
+    console.log("ws client connected. total: " + connectCounter);
 
     sub.on('message', function(channel, msg) {
             // console.log("from channel: " + channel + " msg: " + msg);
             //console.log("msg.length: " + msg.length );
             client.send(msg);
     });
-
+    
     client.on('disconnect', function() {
          //don't do this
         // sub.quit();
-        console.log("ws client disconnected")
+        connectCounter--;
+        console.log("ws client disconnected. total: " + connectCounter);
     });
-
 });
 
 // handle Redis
