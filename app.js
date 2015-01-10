@@ -6,7 +6,7 @@ var redis = require('redis');
 var  express = require('express'),
 
 app = express();
-app.use(express.static(__dirname + '/client'));
+app.use(express.static(__dirname + '/public'));
 
 /* inline config details */
 var subScnls={};
@@ -36,6 +36,7 @@ io.on('connection', function(client){
     client.on('disconnect', function() {
          //don't do this
         // sub.quit();
+        console.log("ws client disconnected")
     });
 
 });
