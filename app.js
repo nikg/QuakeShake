@@ -29,7 +29,7 @@ io.on('connection', function(client){
 
     sub.on('message', function(channel, msg) {
             // console.log("from channel: " + channel + " msg: " + msg);
-            console.log("msg.length: " + msg.length );
+            //console.log("msg.length: " + msg.length );
             client.send(msg);
     });
 
