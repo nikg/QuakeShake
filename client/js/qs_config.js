@@ -68,7 +68,8 @@ channels = [
     })
 ];
 
-host = "http://quakeshakeLB-814759012.us-west-2.elb.amazonaws.com:80"
+//host = "http://quakeshakeLB-814759012.us-west-2.elb.amazonaws.com:80"
+host = "http://quakeshaketest1.azurewebsites.net:80"
 
 function Scnl(scnl){
   //this.buf = [];
