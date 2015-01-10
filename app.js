@@ -6,7 +6,7 @@ var redis = require('redis');
 var  express = require('express'),
 
 app = express();
-app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + '/client'));
 
 /* inline config details */
 var subScnls={};
@@ -21,20 +21,17 @@ var server = http.createServer(app);
 server.listen(process.env.PORT || subScnls.port);
 
 var io = require('socket.io')(server); //port connection for client
+
+var sub = redis.createClient(subScnls.redisPort, subScnls.redisHost);
+sub.subscribe(subScnls.key);//subscribe to Pub channel
+
 io.on('connection', function(client){
-    var sub = redis.createClient(subScnls.redisPort, subScnls.redisHost);
-    sub.subscribe(subScnls.key);//subscribe to Pub channel
+
     sub.on('message', function(channel, msg) {
             // console.log("from channel: " + channel + " msg: " + msg);
             console.log("msg.length: " + msg.length );
             client.send(msg);
     });
-
-    // handle Redis
-    sub.on('connect'     , log('connect'));
-    sub.on('reconnecting', log('reconnecting'));
-    sub.on('error'       , log('error'));
-    sub.on('end'         , log('end'));
 
     client.on('disconnect', function() {
          //don't do this
@@ -42,6 +39,12 @@ io.on('connection', function(client){
     });
 
 });
+
+// handle Redis
+sub.on('connect'     , log('connect'));
+sub.on('reconnecting', log('reconnecting'));
+sub.on('error'       , log('error'));
+sub.on('end'         , log('end'));
 
 function log(type) {
     return function() {
