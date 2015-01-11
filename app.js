@@ -11,6 +11,7 @@ subScnls.port = 8080;
 
 // Initialize servers and application
 var app = express();
+// app.use(express.static(__dirname + '/slurp/pnsn.org')); // Change to /public in production
 app.use(express.static(__dirname + '/public')); // Change to /public in production
 var server = http.createServer(app);
 server.listen(process.env.PORT || subScnls.port); // Azure Web Sites sets env.PORT, otherwise use config
@@ -25,6 +26,8 @@ sub.setMaxListeners(0);
 var connectCounter = 0;
 var allSocks = {};
 
+// socket.broadcast.emit
+
 // New websocket client
 io.on('connection', function(client){
 	client.qsid = connectCounter;
@@ -34,18 +37,19 @@ io.on('connection', function(client){
 	console.log("[" + process.pid + "] ws client connected. total: " + connectCounter);
 
 	client.on('disconnect', function() {
-		delete allSocks[ws.id];
+		delete allSocks[client.qsid];
         	connectCounter--;
-	        console.log("ws client disconnected.");
+//	        console.log("ws client disconnected.");
 	});
 });
 
 // New redis message
 sub.on('message', function(channel, msg) {
-	console.log("[" + process.pid + "] msg.length: " + msg.length );
+//	console.log("[" + process.pid + "] msg.length: " + msg.length );
+//	allSocks[0].broadcast.send(msg);
 	for(var key in allSocks) {
 		allSocks[key].send(msg);
-		console.log("[" + process.pid + "] sent msg to socket " + allSocks[key].qsid);
+//		console.log("[" + process.pid + "] sent msg to socket " + allSocks[key].qsid);
 	}
 });
 
