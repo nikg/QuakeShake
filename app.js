@@ -1,60 +1,65 @@
-//To start get channel name for output of quakeShakePub
-// node server/quakeShakeSub --channel=someChannelName, --redisHost=someRedisHost, --redisPort=redisport
+var http    = require('http');
+var redis   = require('redis');
+var express = require('express');
 
-var http = require('http');
-var redis = require('redis');
-var  express = require('express'),
-
-app = express();
-app.use(express.static(__dirname + '/public'));
-
-/* inline config details */
+// Local configuration
 var subScnls={};
 subScnls.key = "hawks3Z";
-//subScnls.redisHost = "localhost";
-//subScnls.redisPort = 6379;
 subScnls.redisHost = "products01.ess.washington.edu";
 subScnls.redisPort = 32109;
-subScnls.port = 8080; //socket.io port localhost/vm 
+subScnls.port = 8080;
 
+// Initialize servers and application
+var app = express();
+// app.use(express.static(__dirname + '/slurp/pnsn.org')); // Change to /public in production
+app.use(express.static(__dirname + '/public')); // Change to /public in production
 var server = http.createServer(app);
-server.listen(process.env.PORT || subScnls.port); // support Azure port (80)
+server.listen(process.env.PORT || subScnls.port); // Azure Web Sites sets env.PORT, otherwise use config
+var io = require('socket.io')(server); // This attaches the websockets to the previously created server
 
-var io = require('socket.io')(server); //port connection for client
-
+// Initializes redis connection
 var sub = redis.createClient(subScnls.redisPort, subScnls.redisHost);
-sub.subscribe(subScnls.key);//subscribe to Pub channel
+sub.subscribe(subScnls.key);
+sub.setMaxListeners(0);
 
-sub.setMaxListeners(0);  // trying to avoid the error/warning (for Redis)
+// Global utility variables
+var connectCounter = 0;
+var allSocks = {};
 
-var connectCounter = 0; // try to track clients
+// socket.broadcast.emit
 
+// New websocket client
 io.on('connection', function(client){
+	client.qsid = connectCounter;
+	allSocks[connectCounter] = client; // store socket in array object
 
-	connectCounter++; 
-    console.log("ws client connected. total: " + connectCounter);
+	connectCounter++;
+	console.log("[" + process.pid + "] ws client connected. total: " + connectCounter);
 
-    sub.on('message', function(channel, msg) {
-            // console.log("from channel: " + channel + " msg: " + msg);
-            //console.log("msg.length: " + msg.length );
-            client.send(msg);
-    });
-    
-    client.on('disconnect', function() {
-         //don't do this
-        // sub.quit();
-        connectCounter--;
-        console.log("ws client disconnected. total: " + connectCounter);
-    });
+	client.on('disconnect', function() {
+		delete allSocks[client.qsid];
+        	connectCounter--;
+//	        console.log("ws client disconnected.");
+	});
 });
 
-// handle Redis
+// New redis message
+sub.on('message', function(channel, msg) {
+//	console.log("[" + process.pid + "] msg.length: " + msg.length );
+//	allSocks[0].broadcast.send(msg);
+	for(var key in allSocks) {
+		allSocks[key].send(msg);
+//		console.log("[" + process.pid + "] sent msg to socket " + allSocks[key].qsid);
+	}
+});
+
+// A stub for handling other redis events in the future
 sub.on('connect'     , log('connect'));
 sub.on('reconnecting', log('reconnecting'));
 sub.on('error'       , log('error'));
 sub.on('end'         , log('end'));
 
-function log(type) {
+function log(type) { // the redis modules like this instead of console.log()
     return function() {
         console.log(type, arguments);
     }
